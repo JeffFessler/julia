@@ -1551,10 +1551,8 @@ static jl_cgval_t typed_store(jl_codectx_t &ctx,
     assert(!needlock || parent != nullptr);
     Type *elty = isboxed ? T_prjlvalue : julia_type_to_llvm(ctx, jltype);
     if (type_is_ghost(elty)) {
-        if (type_is_ghost(elty)) {
-            if (isStrongerThanMonotonic(Order))
-                ctx.builder.CreateFence(Order);
-        }
+        if (isStrongerThanMonotonic(Order))
+            ctx.builder.CreateFence(Order);
         if (issetfield) {
             return rhs;
         }
@@ -3248,6 +3246,12 @@ static jl_cgval_t emit_setfield(jl_codectx_t &ctx,
         }
         if (needlock)
             emit_lockstate_value(ctx, strct, false);
+        if (isreplacefield) {
+            jl_cgval_t argv[2] = {oldval, mark_julia_type(ctx, Success, false, jl_bool_type)};
+            // TODO: do better here
+            Value *instr = emit_jlcall(ctx, jltuple_func, V_rnull, argv, 2, JLCALL_F_CC);
+            oldval = mark_julia_type(ctx, instr, true, jl_any_type);
+        }
         return oldval;
     }
     else {
