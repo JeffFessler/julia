@@ -139,7 +139,7 @@ function alpine_bootstrap(name::String; release::VersionNumber=v"3.13.5", varian
                 apk_cmd = `$(apk_cmd) $(package.name)`
             end
             run(`sudo chroot --userspec=$(getuid()):$(getgid()) $(rootfs) $(apk_cmd)`)
-        end        
+        end
     end
 end
 
